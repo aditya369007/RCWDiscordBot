@@ -10,7 +10,7 @@ def resetRCWDBCurrency():
     conn.close()
     print("Database Reset!!")
 
-schedule.every().day.at("6:00").do(resetRCWDBCurrency)
+schedule.every().day.at("06:00").do(resetRCWDBCurrency)
 
 while True:
     schedule.run_pending()
