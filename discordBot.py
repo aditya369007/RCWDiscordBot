@@ -74,7 +74,7 @@ async def commend(ctx, arg):
 
 
 # checking your current currency balance
-@bot.command(name='currencybal', help='Shows the amount of 💰 left', usage='!currencybal', aliases=['duddu', 'currbal', 'bankbal'])
+@bot.command(name='currencybal', help='Shows the amount of 💰 left', usage='!currencybal', aliases=['duddu', 'currbal', 'bankbal', "currency"])
 async def currencybal(ctx):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
