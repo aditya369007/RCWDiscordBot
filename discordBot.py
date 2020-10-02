@@ -19,59 +19,62 @@ async def purpose(ctx):
         'My purpose is to track all the reports in this server.',
         'I try my best to serve the president of RCW',
         'Might as well call ourselves Report Commend Warriors',
-        'I try track reports perfectly. Who cares about the commends?'
+        'I try to track reports perfectly. Who cares about the commends?'
     ]
     response = random.choice(purposeQuotes)
     await ctx.send(response)
 
 
 # random report implementation
-@bot.command(name='randreport', help='Reports a random RCW member for the luls', usage='!randreport')
+@bot.command(name='randreport', help='Reports a random RCW member for the luls', usage='!randreport',aliases=['rr', 'randrep'])
 async def randreport(ctx):
     toReport = random.choice(ctx.guild.members)
     await ctx.send('{0} has been reported randomly!'.format(toReport.mention))
 
 
 # reporting another guild member
-@bot.command(name='report', help='Personally report someone', usage='!report @member')
+@bot.command(name='report', help='Personally report someone', usage='!report @member_1 @member_2 .. @member_n',aliases=['rep', 'rpt', 'rp', 'sk'])
 async def report(ctx, arg):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
     cursor.execute('SELECT Currency FROM RCWDB WHERE Name=?', [ctx.author.name])
     currencyReturnResult = cursor.fetchone()
     currencyReturnResult = int(''.join(map(str, currencyReturnResult)))
-    if currencyReturnResult > 0:
+    numberOfMentions = len(ctx.message.mentions)
+    if currencyReturnResult >= numberOfMentions:
         for mention in ctx.message.mentions:
             cursor.execute('UPDATE RCWDB SET Currency = (Currency - 1) WHERE Name = ?', [ctx.author.name])
             cursor.execute('UPDATE RCWDB SET Reports = (Reports + 1) WHERE Name = ?', [mention.name])
+            await ctx.send('{0} has been reported by {1.author.mention}!'.format(mention.mention, ctx))
         conn.commit()
         conn.close()
-        await ctx.send('{0} has been reported by {1.author.mention}!'.format(arg, ctx))
+
     else:
-        await ctx.send('Sorry {0.author.mention}, you do not have enough duddu for a report'.format(ctx))
+        await ctx.send('Sorry {0.author.mention}, you do not have enough duddu for the report/s'.format(ctx))
 
 
 # commending another guild member
-@bot.command(name='commend', help='Commend them,show them some love', usage='!commend @member')
+@bot.command(name='commend', help='Commend them,show them some love', usage='!commend @member_1 @member_2 .. @member_n', aliases=['cmnd'])
 async def commend(ctx, arg):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
     cursor.execute('SELECT Currency FROM RCWDB WHERE Name=?', [ctx.author.name])
     currencyReturnResult = cursor.fetchone()
     currencyReturnResult = int(''.join(map(str, currencyReturnResult)))
-    if currencyReturnResult > 0:
+    numberOfMentions = len(ctx.message.mentions)
+    if currencyReturnResult >= numberOfMentions:
         for mention in ctx.message.mentions:
             cursor.execute('UPDATE RCWDB SET Currency = (Currency - 1) WHERE Name = ?', [ctx.author.name])
             cursor.execute('UPDATE RCWDB SET Commends = (Commends + 1) WHERE Name = ?', [mention.name])
+            await ctx.send('{0} has been commended by {1.author.mention}!'.format(mention.mention, ctx))
         conn.commit()
         conn.close()
-        await ctx.send('{0} has been commended by {1.author.mention}!'.format(arg, ctx))
     else:
-        await ctx.send('Sorry {0.author.mention}, you do not have enough duddu for a commend.'.format(ctx))
+        await ctx.send('Sorry {0.author.mention}, you do not have enough duddu for the commend/s.'.format(ctx))
 
 
 # checking your current currency balance
-@bot.command(name='currencybal', help='Shows the amount of 💰 left', usage='!currencybal')
+@bot.command(name='currencybal', help='Shows the amount of 💰 left', usage='!currencybal', aliases=['duddu', 'currbal', 'bankbal'])
 async def currencybal(ctx):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
@@ -83,7 +86,7 @@ async def currencybal(ctx):
 
 
 # shows the users reports
-@bot.command(name='myreports', help='Shows the amount of reports🔪 you got', usage='!myreports')
+@bot.command(name='myreports', help='Shows the amount of reports🔪 you got', usage='!myreports', aliases=['repbal', 'repcnt'])
 async def myreports(ctx):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
@@ -95,7 +98,7 @@ async def myreports(ctx):
 
 
 #shows the users Commends
-@bot.command(name='mycommends', help='Shows the amount of commends🎉 you got', usage='!myreports')
+@bot.command(name='mycommends', help='Shows the amount of commends🎉 you got', usage='!mycommends', aliases=['cmndbal', 'cmndcnt'])
 async def mycommends(ctx):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
