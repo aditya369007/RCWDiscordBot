@@ -3,17 +3,24 @@ import random
 import sqlite3
 import re
 import asyncio
+import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 
-bot = commands.Bot(command_prefix='!')
+print(discord.__version__)
+
+intents = discord.Intents.default()
+intents.members = True
+# client = discord.Client(intents=intents)
+
+client = commands.Bot(command_prefix='!',intents=intents)
 
 
 # Purpose definition
-@bot.command(name='purpose', help='Proudly displays the bots purpose', usage='!purpose')
+@client.command(name='purpose', help='Proudly displays the bots purpose', usage='!purpose')
 async def purpose(ctx):
     purposeQuotes = [
         'My purpose is to track all the reports in this server.',
@@ -25,15 +32,25 @@ async def purpose(ctx):
     await ctx.send(response)
 
 
-# random report implementation
-@bot.command(name='randreport', help='Reports a random RCW member for the luls', usage='!randreport',aliases=['rr', 'randrep'])
+#random report implementation
+@client.command(name='randreport', help='Reports a random RCW member for the luls', usage='!randreport',aliases=['rr', 'randrep'])
 async def randreport(ctx):
-    toReport = random.choice(ctx.guild.members)
-    await ctx.send('{0} has been reported randomly!'.format(toReport.mention))
+    for guild in client.guilds:
+        toReport = random.choice(guild.members)
+        await ctx.send('{0} has been reported randomly!'.format(toReport.mention))
+    
+# @client.command(name='printall')
+# async def printall(ctx):
+#     for guild in client.guilds:
+#         for member in guild.members:
+#             print(member.name, ' ')
+
+    
+    
 
 
 # reporting another guild member
-@bot.command(name='report', help='Personally report someone', usage='!report @member_1 @member_2 .. @member_n',aliases=['rep', 'rpt', 'rp', 'sk'])
+@client.command(name='report', help='Personally report someone', usage='!report @member_1 @member_2 .. @member_n',aliases=['rep', 'rpt', 'rp', 'sk'])
 async def report(ctx, arg):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
@@ -54,7 +71,7 @@ async def report(ctx, arg):
 
 
 # commending another guild member
-@bot.command(name='commend', help='Commend them,show them some love', usage='!commend @member_1 @member_2 .. @member_n', aliases=['cmnd'])
+@client.command(name='commend', help='Commend them,show them some love', usage='!commend @member_1 @member_2 .. @member_n', aliases=['cmnd'])
 async def commend(ctx, arg):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
@@ -74,7 +91,7 @@ async def commend(ctx, arg):
 
 
 # checking your current currency balance
-@bot.command(name='currencybal', help='Shows the amount of 💰 left', usage='!currencybal', aliases=['duddu', 'currbal', 'bankbal', "currency"])
+@client.command(name='currencybal', help='Shows the amount of 💰 left', usage='!currencybal', aliases=['duddu', 'currbal', 'bankbal', "currency"])
 async def currencybal(ctx):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
@@ -82,11 +99,11 @@ async def currencybal(ctx):
     currencyReturnResult = cursor.fetchone()
     currencyReturnResult = int(''.join(map(str, currencyReturnResult)))
     conn.close()
-    await ctx.send('You currently have {0} 💰 left'.format(currencyReturnResult))
+    await ctx.send('{1.author.mention}} currently has {0} 💰 left'.format(currencyReturnResult,ctx))
 
 
 # shows the users reports
-@bot.command(name='myreports', help='Shows the amount of reports🔪 you got', usage='!myreports', aliases=['repbal', 'repcnt'])
+@client.command(name='myreports', help='Shows the amount of reports🔪 you got', usage='!myreports', aliases=['repbal', 'repcnt'])
 async def myreports(ctx):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
@@ -94,11 +111,11 @@ async def myreports(ctx):
     reportReturnResult = cursor.fetchone()
     reportReturnResult = int(''.join(map(str, reportReturnResult)))
     conn.close()
-    await ctx.send('You currently have {0} reports🔪'.format(reportReturnResult))
+    await ctx.send('{1.author.mention}} currently has {0} reports🔪'.format(reportReturnResult,ctx))
 
 
 #shows the users Commends
-@bot.command(name='mycommends', help='Shows the amount of commends🎉 you got', usage='!mycommends', aliases=['cmndbal', 'cmndcnt'])
+@client.command(name='mycommends', help='Shows the amount of commends🎉 you got', usage='!mycommends', aliases=['cmndbal', 'cmndcnt'])
 async def mycommends(ctx):
     conn = sqlite3.connect("RCWdatabase.db")
     cursor = conn.cursor()
@@ -106,11 +123,26 @@ async def mycommends(ctx):
     commendReturnResult = cursor.fetchone()
     commendReturnResult = int(''.join(map(str, commendReturnResult)))
     conn.close()
-    await ctx.send('You currently have {0} commends🎉'.format(commendReturnResult))
+    await ctx.send('{1.author.mention} currently has {0} commends🎉'.format(commendReturnResult,ctx))
+
+@client.command(name='reportlb')
+async def reportlb(ctx):
+    conn = sqlite3.connect("RCWdatabase.db")
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM RCWDB ORDER BY Reports')
+    result = cursor.fetchall()
+    conn.close()
+    topReportString = result[0][0]
+    for guild in client.guilds:
+        topReportMember = guild.get_member_named(topReportString)
+        await ctx.send('Top Report Holder is {0}!!'.format(topReportMember.mention))
+
+        
+
 
 
 # 'admin' only resets the table data.
-@bot.command(name='resetTableData')
+@client.command(name='resetTableData')
 @commands.is_owner()
 async def resetTableData(ctx):
     conn = sqlite3.connect("RCWdatabase.db")
@@ -120,4 +152,4 @@ async def resetTableData(ctx):
         cursor.execute('UPDATE RCWDB SET Commends = ?, Reports = ?, Currency = ? WHERE Name = ?', (0, 0, 10, member.name))
     conn.commit()
     conn.close()
-bot.run(TOKEN)
+client.run(TOKEN)
