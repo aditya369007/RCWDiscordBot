@@ -99,7 +99,7 @@ async def currencybal(ctx):
     currencyReturnResult = cursor.fetchone()
     currencyReturnResult = int(''.join(map(str, currencyReturnResult)))
     conn.close()
-    await ctx.send('{1.author.mention}} currently has {0} 💰 left'.format(currencyReturnResult,ctx))
+    await ctx.send('{1.author.mention} currently has {0} 💰 left'.format(currencyReturnResult,ctx))
 
 
 # shows the users reports
@@ -111,7 +111,7 @@ async def myreports(ctx):
     reportReturnResult = cursor.fetchone()
     reportReturnResult = int(''.join(map(str, reportReturnResult)))
     conn.close()
-    await ctx.send('{1.author.mention}} currently has {0} reports🔪'.format(reportReturnResult,ctx))
+    await ctx.send('{1.author.mention} currently has {0} reports🔪'.format(reportReturnResult,ctx))
 
 
 #shows the users Commends
