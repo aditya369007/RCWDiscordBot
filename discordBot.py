@@ -5,6 +5,8 @@ import re
 import asyncio
 import discord
 from discord.ext import commands
+from discord.ext.commands import CommandNotFound
+from discord.utils import get
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -27,6 +29,7 @@ async def purpose(ctx):
         'I try my best to serve the president of RCW',
         'Might as well call ourselves Report Commend Warriors',
         'I try to track reports perfectly. Who cares about the commends?'
+        'I think I just heard someone say report SK'
     ]
     response = random.choice(purposeQuotes)
     await ctx.send(response)
@@ -36,7 +39,10 @@ async def purpose(ctx):
 @client.command(name='randreport', help='Reports a random RCW member for the luls', usage='!randreport',aliases=['rr', 'randrep'])
 async def randreport(ctx):
     for guild in client.guilds:
+        conn = sqlite3.connect("RCWdatabase.db")
+        cursor = conn.cursor()
         toReport = random.choice(guild.members)
+        cursor.execute('UPDATE RCWDB SET Reports = (Reports + 1) WHERE Name = ?', [toReport.name])
         await ctx.send('{0} has been reported randomly!'.format(toReport.mention))
     
 # @client.command(name='printall')
@@ -124,6 +130,15 @@ async def mycommends(ctx):
     commendReturnResult = int(''.join(map(str, commendReturnResult)))
     conn.close()
     await ctx.send('{1.author.mention} currently has {0} commends🎉'.format(commendReturnResult,ctx))
+
+@client.event
+async def on_command_error(ctx,error):
+    if isinstance(error, CommandNotFound):
+        for guild in client.guilds:
+            member = get(guild.members,name = 'ShadowKnight')
+            await ctx.send('Could not find that command so I reported {0} instead.'.format(member.mention))
+            return
+            raise error
 
 @client.command(name='reportlb')
 async def reportlb(ctx):
