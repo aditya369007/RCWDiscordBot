@@ -44,6 +44,8 @@ async def randreport(ctx):
         toReport = random.choice(guild.members)
         cursor.execute('UPDATE RCWDB SET Reports = (Reports + 1) WHERE Name = ?', [toReport.name])
         await ctx.send('{0} has been reported randomly!'.format(toReport.mention))
+        conn.commit()
+        conn.close()
     
 # @client.command(name='printall')
 # async def printall(ctx):
@@ -138,7 +140,6 @@ async def on_command_error(ctx,error):
             member = get(guild.members,name = 'ShadowKnight')
             await ctx.send('Could not find that command so I reported {0} instead.'.format(member.mention))
             return
-            raise error
 
 @client.command(name='reportlb')
 async def reportlb(ctx):
